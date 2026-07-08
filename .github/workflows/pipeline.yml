@@ -1,0 +1,79 @@
+name: Auth-Service Pipeline
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  security-sast:
+    name: 0. SAST (Segurança)
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout falhas e vulnerabilidades
+        uses: ajinabraham/njsscan-action@master
+        with:
+          args: "."
+
+  build:
+    name: 1. Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout do código
+        uses: actions/checkout@v5
+
+      - name: configurar o Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: instalar dependências
+        run: npm install
+
+      - name: compilar o código
+        run: npm run build
+
+  lint-and-quality:
+    name: 2. Lint & Quality
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout do código
+        uses: actions/checkout@v5
+
+      - name: configurar o Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: instalar dependências
+        run: npm install
+
+      - name: executar linter (ESLint)
+        run: npm run lint
+
+  test:
+    name: 3. Test
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout do código
+        uses: actions/checkout@v5
+
+      - name: configurar o Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: instalar dependências
+        run: npm install
+
+      - name: executar testes unitários (Jest)
+        run: npm test
